@@ -1,76 +1,107 @@
-# Что это? 
+# Что это?
 
-Этот репозиторий содержит автоматически обновляемые правила маршрутизации [**V2Ray**](https://github.com/v2fly/v2ray-core), основанные на данных о заблокированных доменах и адресах в России.
+Этот репозиторий содержит автоматически обновляемые правила маршрутизации [**V2Ray**](https://github.com/v2fly/v2ray-core), основанные на данных о доменах и IP-адресах, **доступных внутри России**.
+
+В отличие от «списков блокировок», здесь собирается «разрешенный список»: маршрут по умолчанию должен быть `proxy`, а совпадение с доменом или адресом из файла — `direct`. Файлы получаются небольшими и удобными для роутеров, также отпадает необходимость постоянно включать/выключать VPN.
 
 Распространяемые здесь файлы `geoip.dat` и `geosite.dat` могут использоваться в [V2Ray](https://github.com/v2fly/v2ray-core), [v2rayN](https://github.com/2dust/v2rayN), [Xray-core](https://github.com/XTLS/Xray-core), [mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta), [hysteria](https://github.com/apernet/hysteria), [Trojan-Go](https://github.com/p4gefau1t/trojan-go), [leaf](https://github.com/eycorsican/leaf) и так далее.
 
-Этот репозиторий является официальным источником российских geo файлов для [v2rayN](https://github.com/2dust/v2rayN). 
-
-Репозиторий обновляется каждые 6 часов.
+Репозиторий обновляется каждый день в 00:30 UTC.
 
 ## Какие категории содержатся в файлах
 
 ### geoip.dat
 
-`geoip.dat` генерируется в репозитории [@runetfreedom/russia-blocked-geoip](https://github.com/runetfreedom/russia-blocked-geoip)
-
-Основные категории:
-
-- `ru-blocked` содержит `ipresolve.lst` и `subnet.lst` сервиса antifilter.download
-- `ru-blocked-community` содержит `community.lst` сервиса community.antifilter.download
-- `re-filter` содержит `ipsum.lst` из [re:filter](https://github.com/1andrevich/Re-filter-lists)
-- `ru-whitelist` содержит `cidrwhitelist.txt` из [russia-mobile-internet-whitelist](https://github.com/hxehex/russia-mobile-internet-whitelist)
-
-Для вашего удобства в файлы включены несколько дополнительных категорий (на основе ASN):
-
-- `geoip:cloudflare`
-- `geoip:cloudfront`
-- `geoip:facebook`
-- `geoip:fastly`
-- `geoip:google`
-- `geoip:netflix`
-- `geoip:telegram`
-- `geoip:twitter`
-- `geoip:ddos-guard`
-- `geoip:yandex`
-
-### geosite.dat
-
-`geosite.dat` генерируется в репозитории [@runetfreedom/russia-blocked-geosite](https://github.com/runetfreedom/russia-blocked-geosite)
+`geoip.dat` генерируется в репозитории [@golukon/russia-only-geoip](https://github.com/golukon/russia-only-geoip). Источник данных: [scanitex.com](https://scanitex.com/ru/resources/ip-ranges/ru).
 
 Доступные категории:
 
-- Все категории из [@v2fly/domain-list-community](https://github.com/v2fly/domain-list-community/tree/master/data). Включая: `google`, `discord`, `youtube`, `twitter`, `meta`, `openai` и так далее.
-- `geosite:ru-blocked` - заблокированные в России домены (`antifilter-download-community` + `re:filter`)
-- `geosite:ru-blocked-all` - **все известные** заблокированные в России домены (из всех источников сразу). Список содержит не менее 700 тысяч доменов, употреблять с осторожностью.
-- `geosite:ru-available-only-inside` - Домены, доступные только внутри России
-- `geosite:antifilter-download` - все домены из `antifilter.download` (почти 700 тысяч, употреблять с осторожностью)
-- `geosite:antifilter-download-community` - все домены из `community.antifilter.download`
-- `geosite:refilter` - все домены из `re:filter`
-- `geosite:category-ads-all` - все рекламные домены
-- `geosite:win-spy` - домены, используемые windows для слежки и сбора аналитики
-- `geosite:win-update` - домены, используемые windows для обновлений
-- `geosite:win-extra` - прочие домены, используемые windows
+- `geoip:ru` — список всех российских IPv4-адресов
+- `geoip:private` — приватные и зарезервированные сети, например `10.0.0.0/8`, `127.0.0.0/8`, `192.168.0.0/16`
 
-# Cкачать 
+### geosite.dat
+
+`geosite.dat` генерируется в репозитории [@golukon/russia-only-geosite](https://github.com/golukon/russia-only-geosite). Данные собираются из форков [@golukon](https://github.com/golukon):
+
+- [@golukon/domains-only-russia](https://github.com/golukon/domains-only-russia) — `ru-available-only-inside`
+- [@golukon/russia-mobile-internet-whitelist](https://github.com/golukon/russia-mobile-internet-whitelist) — `whitelist.txt`
+- [@golukon/domain-list-community](https://github.com/golukon/domain-list-community) — `category-gov-ru`
+
+Доступные категории:
+
+- `geosite:ru-inside` — домены, доступные внутри РФ (в т.ч. недоступные из-за границы, белые списки, госсервисы). Дублирование доменов отсутствует
+
+## Пример конфигурации для v2rayA
+
+```
+default: proxy
+ip(geoip:private)->direct
+
+# write your own rules below
+ip(geoip:ru)->direct
+domain(geosite:ru-inside)->direct
+```
+
+## Пример конфигурации для v2rayN/v2rayNG
+
+```
+[
+    {
+        "enabled": true,
+        "ip": [
+            "geoip:private"
+        ],
+        "locked": false,
+        "outboundTag": "direct",
+        "remarks": "RU-0 [Приватные сети напрямую]"
+    },
+    {
+        "enabled": true,
+        "ip": [
+            "geoip:ru"
+        ],
+        "locked": false,
+        "outboundTag": "direct",
+        "remarks": "RU-0 [Российские IPv4 напрямую]"
+    },
+    {
+        "domain": [
+            "geosite:ru-inside"
+        ],
+        "enabled": true,
+        "locked": false,
+        "outboundTag": "direct",
+        "remarks": "RU-0 [Российские домены напрямую]"
+    },
+    {
+        "enabled": true,
+        "locked": false,
+        "outboundTag": "proxy",
+        "port": "0-65535",
+        "remarks": "RU-0 [Остальное прокси]"
+    }
+]
+```
+
+# Cкачать
 
 По ссылкам ниже всегда доступна последняя версия файлов.
 
 - **geoip.dat**
-    - [https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geoip.dat](https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geoip.dat)
+    - [https://raw.githubusercontent.com/golukon/russia-v2ray-rules-lite/release/geoip.dat](https://raw.githubusercontent.com/golukon/russia-v2ray-rules-lite/release/geoip.dat)
 - **geosite.dat**
-    - [https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geosite.dat](https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geosite.dat)
+    - [https://raw.githubusercontent.com/golukon/russia-v2ray-rules-lite/release/geosite.dat](https://raw.githubusercontent.com/golukon/russia-v2ray-rules-lite/release/geosite.dat)
 
 
 ## Cмежные проекты
 
-- [@runetfreedom/russia-blocked-geoip](https://github.com/runetfreedom/russia-blocked-geoip) - генерация geoip файлов
-- [@runetfreedom/russia-blocked-geosite](https://github.com/runetfreedom/russia-blocked-geosite) - генерация geosite файлов
-- [@runetfreedom/russia-v2ray-custom-routing-list](https://github.com/runetfreedom/russia-v2ray-custom-routing-list) - правила маршрутизации для различных клиентов
-- [@runetfreedom/geodat2srs](https://github.com/runetfreedom/geodat2srs) - конвертер geoip/geosite.dat в sing-box srs
+- [@golukon/russia-only-geoip](https://github.com/golukon/russia-only-geoip) - генерация geoip файлов
+- [@golukon/russia-only-geosite](https://github.com/golukon/russia-only-geosite) - генерация geosite файлов
 
 ## Благодарности
 
-- [antifilter.download](https://antifilter.download/) - за предоставление данных о заблокированных доменах и комьюнити для их обновления
-- [re:filter](https://github.com/1andrevich/Re-filter-lists) - за предоставление отфильтрованных данных о заблокированных доменах
-- [@Loyalsoldier/v2ray-rules-dat](https://github.com/Loyalsoldier/v2ray-rules-dat) - за идею и основу этого проекта
+- [scanitex.com](https://scanitex.com/ru/resources/ip-ranges/ru) - за список российских IP-адресов
+- [@Loyalsoldier/geoip](https://github.com/Loyalsoldier/geoip) - за сборщик geoip.dat
+- [@v2fly/domain-list-community](https://github.com/v2fly/domain-list-community) - за сборщик geosite.dat и `category-gov-ru`
+- [@runetfreedom/russia-domains-list](https://github.com/runetfreedom/russia-domains-list) - за список `ru-available-only-inside` и шаблоны репозиториев
+- [@hxehex/russia-mobile-internet-whitelist](https://github.com/hxehex/russia-mobile-internet-whitelist) - за список `whitelist.txt`
